@@ -36,7 +36,7 @@ def loadmodel(filename):
         raise Exception("Model not found: " + filename )
 
 def load_train_dataset():
-    data_path = '../datasets/train_resized'
+    data_path = './datasets/train_resized'
     trainTransform  = torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                     torchvision.transforms.ToTensor()])
     train_dataset = torchvision.datasets.ImageFolder(
@@ -52,7 +52,7 @@ def load_train_dataset():
     return train_loader, train_dataset
 
 def load_test_dataset():
-    data_path = '../datasets/test'
+    data_path = './datasets/test'
     testTransform  = torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
                                     torchvision.transforms.ToTensor()])
     test_dataset = torchvision.datasets.ImageFolder(
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     for epoch in range(int(epochs)):
         print("Epoch", epoch)
         for i, (images, labels) in enumerate(train_loader):
-            print(i)
+            print(i, end=",")
             images = Variable(images.view(-1, 128 * 128))
             labels = Variable(labels)
 
@@ -123,3 +123,4 @@ if __name__ == "__main__":
                 accuracy = 100 * correct/total
                 print("Iteration: {}. Loss: {}. Accuracy: {}.".format(iter, loss.item(), accuracy))
                 storemodel(model, "epoch_" + str(epoch))
+        print()
