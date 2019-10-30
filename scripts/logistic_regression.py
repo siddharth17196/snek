@@ -88,9 +88,10 @@ if __name__ == "__main__":
     input_dim = 16384
     output_dim = 100
     lr_rate = 0.001
+    print(epochs)
 
     # Load variables
-    model = LogisticRegression(input_dim, output_dim)
+    model = LogisticRegression(input_dim, output_dim).cuda()
     criterion = torch.nn.CrossEntropyLoss() # computes softmax and then the cross entropy
     optimizer = torch.optim.SGD(model.parameters(), lr=lr_rate)
 
@@ -99,8 +100,8 @@ if __name__ == "__main__":
         print("Epoch", epoch)
         for i, (images, labels) in enumerate(train_loader):
             print(i, end=",")
-            images = Variable(images.view(-1, 128 * 128))
-            labels = Variable(labels)
+            images = Variable(images.view(-1, 128 * 128).cuda())
+            labels = Variable(labels.cuda())
 
             optimizer.zero_grad()
             outputs = model(images)
