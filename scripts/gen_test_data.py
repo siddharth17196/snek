@@ -11,7 +11,7 @@ if __name__ == "__main__":
     dataset_path = root + "/datasets"
     #where all class folders are
     train_path = dataset_path + "/train_resized"
-    test_path = dataset_path + "/test"
+    test_path = dataset_path + "/valid"
 
     classes = os.listdir(train_path)
     start_time = time.time()
