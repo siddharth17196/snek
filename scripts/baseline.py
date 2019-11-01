@@ -39,7 +39,7 @@ train_data = datasets.ImageFolder(data_dir + "/train")
 num_classes = len(train_data.classes)
 model_name = "densenet"  # resnet, vgg or densenet
 input_size = 128  # DenseNet Characteristic
-batch_size = 16
+batch_size = 32
 feature_extract = False
 
 def load_train_dataset(root, batchsize):
@@ -178,6 +178,9 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25):
             epoch_fscore = np.average(np.array(fscore))
             
             print('{} Loss: {:.4f} Acc: {:.4f} F: {:.3f}'.format(phase, epoch_loss, epoch_acc, epoch_fscore))
+
+            torch.save(model.state_dict(), "./model/model"+str(epoch))
+            torch.save(optimizer.state_dict(), "./model/optimizer"+str(epoch))
             
             if phase == 'train':
                 loss_train_evo.append(epoch_loss)
@@ -268,7 +271,7 @@ criterion = nn.CrossEntropyLoss()
 # *Here, a training sample of two epochs is followingly shown*.  
 
 # %%
-num_epochs = 5
+num_epochs = 20
 model_ft, loss_train, acc_train, fs_train, loss_val, acc_val, fs_val = train_model(model_ft, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)
 # Save model
 # torch.save(model_ft.state_dict(),'/mnt/disks/dades/model_baseline.pth')
