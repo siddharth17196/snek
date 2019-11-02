@@ -1,20 +1,3 @@
-# %% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
-# import os
-# try:
-# 	os.chdir(os.path.join(os.getcwd(), '../../../../tmp'))
-# 	print(os.getcwd())
-# except:
-# 	pass
-
-# The problem we are trying to solve here is to classify colour images of snakes, into 45 different categories (*coluber constrictor, boa imperator, crotalus horridus, ...*). The dataset we will use is extracted from the AI Crowd competition: **Snake Species Identification Challenge**. 
-# 
-# In this notebook, we will approach this task by implementing a **Baseline** CNN. For this project we have also implemented another approach, implementing advanced features, that also has a corresponding self-contained notebooks. 
-# 
-# Our motivation to tackle this problem of image classification using a CNN (Convolutional Neural Network) is quite obvious, because it is a specialized kind of neural network for processing data that has a known grid-like topology that leverages the ideas of local connectivity, parameter sharing and pooling/subsampling hidden units. 
-# 
-# *For more details about out project please visit: https://www.aicrowd.com/challenges/snake-species-identification-challenge*
-
-# In this section we will import Pytorch and some relevant Python libraries (Numpy, Matplotlib...) that will later be used.
 import torch
 import torchvision
 import random
@@ -30,21 +13,23 @@ from torchvision import datasets, models, transforms
 from sklearn.metrics import f1_score
 from PIL import Image
 
-# # 2. Data Preparation
-# 
-# In this section we will download the original dataset, we will distribute it in training and validation, and will organize them in a structured way. 
-# 
 data_dir = "./datasets"
 train_data = datasets.ImageFolder(data_dir + "/train")
 num_classes = len(train_data.classes)
 model_name = "densenet"  # resnet, vgg or densenet
-input_size = 128  # DenseNet Characteristic
+input_size = 256  # DenseNet Characteristic
+crop_size = 224
 batch_size = 32
 feature_extract = False
 
 def load_train_dataset(root, batchsize):
     data_path = root
-    trainTransform  = torchvision.transforms.Compose([torchvision.transforms.ToTensor(),])
+    trainTransform  = torchvision.transforms.Compose([torchvision.transforms.Resize((input_size, input_size)),
+                        torchvision.transforms.CenterCrop(crop_size),
+                        torchvision.transforms.ToTensor(),
+                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                        ])
     train_dataset = torchvision.datasets.ImageFolder(
         root=data_path,
         transform=trainTransform
@@ -59,7 +44,7 @@ def load_train_dataset(root, batchsize):
 
 image_datasets = {}
 dataloaders_dict = {}
-dataloaders_dict['train'], image_datasets['train'] = load_train_dataset("./datasets/train_resized", batch_size)
+dataloaders_dict['train'], image_datasets['train'] = load_train_dataset("./datasets/train", batch_size)
 dataloaders_dict['valid'], image_datasets['valid'] = load_train_dataset("./datasets/valid", batch_size)
 
 class_names = image_datasets['train'].classes
@@ -80,7 +65,8 @@ def imshow(inp):
     inp = std * inp + mean
     inp = np.clip(inp, 0, 1)
     plt.imshow(inp)
-    plt.pause(0.001)
+    plt.show()
+    # plt.pause(0.001)
 
 # Get a mini-batch of training data
 mini_batch = 4
@@ -90,8 +76,7 @@ inputs, classes = next(it)
 
 # Make a grid from batch
 out = torchvision.utils.make_grid(inputs)
-# imshow(out)
-
+imshow(out)
 # %% [markdown]
 # # 3. Model Definition
 # In this section we will define the training and the initialization of the network as well as its configuration.
@@ -217,21 +202,21 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
-        input_size = 128
+        input_size = 224
 
     elif model_name == "vgg":  # VGG-11
         model_ft = models.vgg11_bn(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
-        input_size = 128
+        input_size = 224
 
     elif model_name == "densenet":  # DenseNet-121
         model_ft = models.densenet121(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier.in_features
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
-        input_size = 128
+        input_size = 224
 
     return model_ft, input_size
 
@@ -313,34 +298,34 @@ plot_metric(fs_train, fs_val, 'F-Score')
 
 # %%
 # Load the pretrained model
-model_weights_path = '/mnt/disks/dades/model_baseline.pth'
-model_weights = torch.load(model_weights_path)
-model_ft.load_state_dict(model_weights)
-print('Model Loaded')
+# model_weights_path = '/mnt/disks/dades/model_baseline.pth'
+# model_weights = torch.load(model_weights_path)
+# model_ft.load_state_dict(model_weights)
+# print('Model Loaded')
 
-# %% [markdown]
-# **Infer Test Data:** We infer to our model a random image from the test set and visualize it with its predicted class. We do not have the test set labels, for we cannot evaluate our model's behaviour on this particular image. However, an interesting option is to look for the predicted class in Google Images and see if the images shown are similar to the one infered to our network...
+# # %% [markdown]
+# # **Infer Test Data:** We infer to our model a random image from the test set and visualize it with its predicted class. We do not have the test set labels, for we cannot evaluate our model's behaviour on this particular image. However, an interesting option is to look for the predicted class in Google Images and see if the images shown are similar to the one infered to our network...
 
-# %%
-def get_item():
-    test_files = os.listdir('/mnt/disks/dades/test/')
-    idx = random.randint(0,len(test_files))
-    ima_dir = os.path.join('/mnt/disks/dades/test/',test_files[idx])
-    scaler = transforms.Resize((224, 224))
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                 std=[0.229, 0.224, 0.225])
-    to_tensor = transforms.ToTensor()
-    ima = Image.open(ima_dir)
-    plt.imshow(ima)
-    item = (normalize(to_tensor(scaler(ima))).unsqueeze(0)).to(device)
-    return item
+# # %%
+# def get_item():
+#     test_files = os.listdir('/mnt/disks/dades/test/')
+#     idx = random.randint(0,len(test_files))
+#     ima_dir = os.path.join('/mnt/disks/dades/test/',test_files[idx])
+#     scaler = transforms.Resize((224, 224))
+#     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+#                                  std=[0.229, 0.224, 0.225])
+#     to_tensor = transforms.ToTensor()
+#     ima = Image.open(ima_dir)
+#     plt.imshow(ima)
+#     item = (normalize(to_tensor(scaler(ima))).unsqueeze(0)).to(device)
+#     return item
 
-class_name = ['Thamnophis Proximus', 'Nerodia Sipedon', 'Opheodrys Vernalis', 'Crotalus Horridus', 'Crotalus Pyrrhus', 'Nerodia Rhombifer', 'Thamnophis Sirtalis', 'Natrix Natrix', 'Crotalus Adamanteus', 'Charina Bottae', 'Pituophis Catenifer', 'Lampropeltis Triangulum', 'Nerodia Erythrogaster', 'Thamnophis Marcianus', 'Lampropeltis Californiae', 'Crotalus Ruber', 'Rhinocheilus Lecontei', 'Opheodrys Aestivus', 'Thamnophis Ordinoides', 'Thamnophis Radix', 'Masticophis Flagellum', 'Pantherophis Vulpinus', 'Hierophis Viridiflavus', 'Feterodon Platirhinos', 'Pantherophis Emoryi', 'Regina Septemvittata', 'Haldea Striatula', 'Diadophis Punctatus', 'Nerodia Fasciata', 'Storeria Occipitomaculata', 'Crotalus Scutulatus', 'Storeria Dekayi', 'Crotalus Viridis', 'Boa Imperator', 'Pantherophis Obsoletus', 'Lichanura Trivirgata', 'Agkistrodon Contortrix', 'Thamnophis Elegans', 'Agkistrodon Piscivorus', 'Pantherophis Guttatus', 'Crotalus Atrox', 'Carphophism Amoenus', 'Coluber Constrictor', 'Pantherophis Spiloides', 'Pantherophis Alleghaniensis']
-item = get_item()
-model_ft.eval()
-output = model_ft(item)
-_, preds = torch.max(output, 1)
-class_id = preds.item()
-print("Predicted class: ", class_name[class_id])
+# class_name = ['Thamnophis Proximus', 'Nerodia Sipedon', 'Opheodrys Vernalis', 'Crotalus Horridus', 'Crotalus Pyrrhus', 'Nerodia Rhombifer', 'Thamnophis Sirtalis', 'Natrix Natrix', 'Crotalus Adamanteus', 'Charina Bottae', 'Pituophis Catenifer', 'Lampropeltis Triangulum', 'Nerodia Erythrogaster', 'Thamnophis Marcianus', 'Lampropeltis Californiae', 'Crotalus Ruber', 'Rhinocheilus Lecontei', 'Opheodrys Aestivus', 'Thamnophis Ordinoides', 'Thamnophis Radix', 'Masticophis Flagellum', 'Pantherophis Vulpinus', 'Hierophis Viridiflavus', 'Feterodon Platirhinos', 'Pantherophis Emoryi', 'Regina Septemvittata', 'Haldea Striatula', 'Diadophis Punctatus', 'Nerodia Fasciata', 'Storeria Occipitomaculata', 'Crotalus Scutulatus', 'Storeria Dekayi', 'Crotalus Viridis', 'Boa Imperator', 'Pantherophis Obsoletus', 'Lichanura Trivirgata', 'Agkistrodon Contortrix', 'Thamnophis Elegans', 'Agkistrodon Piscivorus', 'Pantherophis Guttatus', 'Crotalus Atrox', 'Carphophism Amoenus', 'Coluber Constrictor', 'Pantherophis Spiloides', 'Pantherophis Alleghaniensis']
+# item = get_item()
+# model_ft.eval()
+# output = model_ft(item)
+# _, preds = torch.max(output, 1)
+# class_id = preds.item()
+# print("Predicted class: ", class_name[class_id])
 
-# We concluded that our baseline network performed decently on the task of snakes species identification with just a few epochs, reaching an maximum accuracy of 65% on the validation set. However, it turned to be highly **overfitted**, for it did not manage to generalize well. To try to prevent this overfitting, many actions could be taken such as applying a regularization, data augmentation, dropout and so on. Some of these features will be tackled in an advanced notebook named *Enhanced.ipynb*. 
+# # We concluded that our baseline network performed decently on the task of snakes species identification with just a few epochs, reaching an maximum accuracy of 65% on the validation set. However, it turned to be highly **overfitted**, for it did not manage to generalize well. To try to prevent this overfitting, many actions could be taken such as applying a regularization, data augmentation, dropout and so on. Some of these features will be tackled in an advanced notebook named *Enhanced.ipynb*. 
