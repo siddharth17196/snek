@@ -52,21 +52,5 @@ for data, label in loader:
 mean /= nb_samples
 std /= nb_samples
 
-# print(train_set.train_data.mean(axis=(0,1,2))/255)
-# print(train_set.train_data.std(axis=(0,1,2))/255)
-
-# elif args.dataset == "cifar100":
-#     train_transform = transforms.Compose([transforms.ToTensor()])
-#     train_set = torchvision.datasets.CIFAR100(root=data_dir, train=True, download=True, transform=train_transform)
-#     #print(vars(train_set))
-#     print(train_set.train_data.shape)
-#     print(np.mean(train_set.train_data, axis=(0,1,2))/255)
-#     print(np.std(train_set.train_data, axis=(0,1,2))/255)
-
-# elif args.dataset == "mnist":
-#     train_transform = transforms.Compose([transforms.ToTensor()])
-#     train_set = torchvision.datasets.MNIST(root=data_dir, train=True, download=True, transform=train_transform)
-#     #print(vars(train_set))
-#     print(list(train_set.train_data.size()))
-#     print(train_set.train_data.float().mean()/255)
-#     print(train_set.train_data.float().std()/255)
+print(mean, std)
+# tensor([0.0432, 0.0554, 0.0264]) tensor([0.8338, 0.8123, 0.7803])
