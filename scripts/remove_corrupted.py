@@ -15,4 +15,4 @@ for root, dirs, files in os.walk(place):
         size = os.path.getsize(file_path) #pass the full path to getsize()
         if size == 0:
             print(f, file_path)
-            # os.remove(file_path)
+            os.remove(file_path)
