@@ -1,9 +1,11 @@
 import os
-import torch
 import pickle
-import torchvision
+import torch
+import torch.nn as nn
 from pathlib import Path
-from torch.autograd import Variable
+import torchvision
+import torchvision.datasets as dsets
+import torchvision.transforms as transforms
 
 def savePickle(filename, data):
     with open(filename, 'wb') as file:
@@ -35,93 +37,111 @@ def loadmodel(filename):
     except:
         raise Exception("Model not found: " + filename )
 
-def load_train_dataset():
-    data_path = './datasets/train_resized'
-    trainTransform  = torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
-                                    torchvision.transforms.ToTensor()])
+def load_train_dataset(input_size, crop_size, batch_size):
+    data_path = './datasets/train'
+    trainTransform  = torchvision.transforms.Compose([
+                        torchvision.transforms.Resize((input_size, input_size)),
+                        torchvision.transforms.CenterCrop(crop_size),
+                        torchvision.transforms.ToTensor(),
+                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                    ])
+
     train_dataset = torchvision.datasets.ImageFolder(
         root=data_path,
         transform=trainTransform
     )
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=100,
+        batch_size=batch_size,
         num_workers=0,
         shuffle=True
     )
     return train_loader, train_dataset
 
-def load_test_dataset():
-    data_path = './datasets/test'
-    testTransform  = torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=1),
-                                    torchvision.transforms.ToTensor()])
-    test_dataset = torchvision.datasets.ImageFolder(
+def load_test_dataset(input_size, crop_size, batch_size):
+    data_path = './datasets/valid'
+    trainTransform  = torchvision.transforms.Compose([
+                        torchvision.transforms.Resize((input_size, input_size)),
+                        torchvision.transforms.CenterCrop(crop_size),
+                        torchvision.transforms.ToTensor(),
+                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                    ])
+
+    train_dataset = torchvision.datasets.ImageFolder(
         root=data_path,
-        transform=testTransform
+        transform=trainTransform
     )
-    test_loader = torch.utils.data.DataLoader(
+    train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=100,
+        batch_size=batch_size,
         num_workers=0,
         shuffle=True
     )
-    return test_loader, test_dataset
+    return train_loader, train_dataset
 
-class LogisticRegression(torch.nn.Module):
-    def __init__(self, input_dim, output_dim):
-        super(LogisticRegression, self).__init__()
-        self.linear = torch.nn.Linear(input_dim, output_dim)
+input_size = 256  # DenseNet Characteristic
+crop_size = 224
+batch_size = 16
+
+train_loader, train_dataset = load_train_dataset(input_size, crop_size, batch_size)
+test_loader, test_dataset = load_test_dataset(input_size, crop_size, batch_size)
+
+n_iters = 2000
+num_epochs = n_iters / (len(train_dataset) / batch_size)
+num_epochs = 20
+
+class LogisticRegressionModel(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super(LogisticRegressionModel, self).__init__()
+        self.linear = nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
-        outputs = self.linear(x)
-        return outputs
+        out = self.linear(x)
+        return out
 
-if __name__ == "__main__":
-    # Load data
-    train_loader, train_dataset = load_train_dataset()
-    test_loader, test_dataset = load_test_dataset()
+input_dim = crop_size*crop_size*3
+output_dim = 100
 
-    # System params
-    batch_size = 100
-    n_iters = 3000
-    epochs = n_iters / (len(train_dataset) / batch_size)
-    input_dim = 16384
-    output_dim = 100
-    lr_rate = 0.001
-    print(epochs)
+model = LogisticRegressionModel(input_dim, output_dim)
 
-    # Load variables
-    model = LogisticRegression(input_dim, output_dim).cuda()
-    criterion = torch.nn.CrossEntropyLoss() # computes softmax and then the cross entropy
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr_rate)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model.to(device)
 
-    iter = 0
-    for epoch in range(int(epochs)):
-        print("Epoch", epoch)
-        for i, (images, labels) in enumerate(train_loader):
-            print(i, end=",")
-            images = Variable(images.view(-1, 128 * 128).cuda())
-            labels = Variable(labels.cuda())
+criterion = nn.CrossEntropyLoss()
 
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
+learning_rate = 0.001
 
-            iter+=1
-            if iter%500==0:
-                # calculate Accuracy
-                correct = 0
-                total = 0
-                for images, labels in test_loader:
-                    images = Variable(images.view(-1, 128*128))
-                    outputs = model(images)
-                    _, predicted = torch.max(outputs.data, 1)
-                    total+= labels.size(0)
-                    # for gpu, bring the predicted and labels back to cpu fro python operations to work
-                    correct+= (predicted == labels).sum()
-                accuracy = 100 * correct/total
-                print("Iteration: {}. Loss: {}. Accuracy: {}.".format(iter, loss.item(), accuracy))
-                storemodel(model, "epoch_" + str(epoch))
-        print()
+optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+iter = 0
+training_losses = []
+for epoch in range(num_epochs):
+    print('epoch', epoch)
+    for i, (images, labels) in enumerate(train_loader):
+
+        images = images.view(-1, 3*crop_size*crop_size).requires_grad_().to(device)
+        labels = labels.to(device)
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        training_losses.append(loss.item())
+        optimizer.step()
+        iter += 1
+        if iter % 500 == 0:
+            correct = 0
+            total = 0
+            for images, labels in test_loader:
+                images = images.view(-1, 3*crop_size*crop_size).to(device)
+                outputs = model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+
+                if torch.cuda.is_available():
+                    correct += (predicted.cpu() == labels.cpu()).sum()
+                else:
+                    correct += (predicted == labels).sum()
+
+            accuracy = 100 * correct.item() / total
+            print('Iteration: {}. Loss: {}. Accuracy: {}'.format(iter, loss.item(), accuracy))
+            storemodel(training_losses, "losses"+str(epoch)+"_"+str(iter))
