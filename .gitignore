@@ -2,3 +2,5 @@ temp_dir/
 datasets/
 .vscode/
 .venv/
+preds_tests/
+
