@@ -43,7 +43,7 @@ def load_train_dataset(input_size, crop_size, batch_size):
                         torchvision.transforms.Resize((input_size, input_size)),
                         torchvision.transforms.CenterCrop(crop_size),
                         torchvision.transforms.ToTensor(),
-                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                        transforms.Normalize([0.0432, 0.0554, 0.0264], [0.8338, 0.8123, 0.7803]),
                     ])
 
     train_dataset = torchvision.datasets.ImageFolder(
@@ -64,7 +64,7 @@ def load_test_dataset(input_size, crop_size, batch_size):
                         torchvision.transforms.Resize((input_size, input_size)),
                         torchvision.transforms.CenterCrop(crop_size),
                         torchvision.transforms.ToTensor(),
-                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+                        transforms.Normalize([0.0432, 0.0554, 0.0264], [0.8338, 0.8123, 0.7803]),
                     ])
 
     train_dataset = torchvision.datasets.ImageFolder(

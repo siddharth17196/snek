@@ -34,6 +34,7 @@ y_pred = numpy.array(y_pred)
 
 classes = list(set(y_test))
 print(len(classes))
+print(metrics.accuracy_score(y_test, y_pred))
 y_test = label_binarize(y_test,classes)
 y_pred = label_binarize(y_pred,classes)
 plt.figure()
