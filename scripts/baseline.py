@@ -17,6 +17,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--traindir', required=True)
 parser.add_argument('-v', '--validdir', required=True)
+parser.add_argument('-b', '--batchsize', required=False, default=32)
 
 args = parser.parse_args()
 train_data_dir = args.traindir
@@ -27,7 +28,7 @@ num_classes = len(train_data.classes)
 model_name = "densenet"  # resnet, vgg or densenet
 input_size = 256  # DenseNet Characteristic
 crop_size = 224
-batch_size = 32
+batch_size = args.batchsize
 feature_extract = False
 
 def load_train_dataset(root, batchsize):
