@@ -28,7 +28,7 @@ num_classes = len(train_data.classes)
 model_name = "densenet"  # resnet, vgg or densenet
 input_size = 256  # DenseNet Characteristic
 crop_size = 224
-batch_size = args.batchsize
+batch_size = int(args.batchsize)
 feature_extract = False
 
 def load_train_dataset(root, batchsize):
