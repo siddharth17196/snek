@@ -12,9 +12,17 @@ import torch.utils.checkpoint as cp
 from torchvision import datasets, models, transforms
 from sklearn.metrics import f1_score
 from PIL import Image
+import argparse
 
-data_dir = "./datasets"
-train_data = datasets.ImageFolder(data_dir + "/train")
+parser = argparse.ArgumentParser()
+parser.add_argument('-t', '--traindir', required=True)
+parser.add_argument('-v', '--validdir', required=True)
+
+args = parser.parse_args()
+train_data_dir = args.traindir
+valid_data_dir = args.validdir
+
+train_data = datasets.ImageFolder(train_data_dir)
 num_classes = len(train_data.classes)
 model_name = "densenet"  # resnet, vgg or densenet
 input_size = 256  # DenseNet Characteristic
@@ -27,8 +35,7 @@ def load_train_dataset(root, batchsize):
     trainTransform  = torchvision.transforms.Compose([torchvision.transforms.Resize((input_size, input_size)),
                         torchvision.transforms.CenterCrop(crop_size),
                         torchvision.transforms.ToTensor(),
-                        transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
-                        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+                        transforms.Normalize([0.0432, 0.0554, 0.0264], [0.8338, 0.8123, 0.7803]),
                         ])
     train_dataset = torchvision.datasets.ImageFolder(
         root=data_path,
@@ -44,8 +51,8 @@ def load_train_dataset(root, batchsize):
 
 image_datasets = {}
 dataloaders_dict = {}
-dataloaders_dict['train'], image_datasets['train'] = load_train_dataset("./datasets/train", batch_size)
-dataloaders_dict['valid'], image_datasets['valid'] = load_train_dataset("./datasets/valid", batch_size)
+dataloaders_dict['train'], image_datasets['train'] = load_train_dataset(train_data_dir, batch_size)
+dataloaders_dict['valid'], image_datasets['valid'] = load_train_dataset(valid_data_dir, batch_size)
 
 class_names = image_datasets['train'].classes
 # print(len(class_names))
@@ -76,7 +83,7 @@ inputs, classes = next(it)
 
 # Make a grid from batch
 out = torchvision.utils.make_grid(inputs)
-imshow(out)
+# imshow(out)
 # %% [markdown]
 # # 3. Model Definition
 # In this section we will define the training and the initialization of the network as well as its configuration.
@@ -248,14 +255,9 @@ optimizer_ft = optim.Adam(params_to_update, lr=3e-4)
 # Loss Funciton
 criterion = nn.CrossEntropyLoss()
 
-# %% [markdown]
-# # 4. Model Fine-Tuning 
-# %% [markdown]
 # **Training and Validation:** Network is trained for a 15 epochs on GCLOUD. The initial idea was to fine tune the model on this Jupyter Notebook. However, due to its wrong memory management, sometimes the training stopped after a few epochs and model did not end its training. Therefore, model has been directly run on GCLOUD terminal and then its metrics printed and hardcoded on this notebook to be able to visualize them. Although we are aware that this is not an elegant solution, we use it because it has shown to be effective. 
-# 
 # *Here, a training sample of two epochs is followingly shown*.  
 
-# %%
 num_epochs = 20
 model_ft, loss_train, acc_train, fs_train, loss_val, acc_val, fs_val = train_model(model_ft, dataloaders_dict, criterion, optimizer_ft, num_epochs=num_epochs)
 # Save model
@@ -272,6 +274,7 @@ def plot_metric(metric_train, metric_val, title):
     ax.plot(metric_train, label='Training')
     ax.plot(metric_val, label='Validation')
     ax.legend(loc='upper left')
+    plt.savefig("metric.png")
 
 """
 # Results for a GCLOUD Terminal training for 20 epochs
@@ -291,12 +294,7 @@ plot_metric(loss_train, loss_val, 'Loss')
 plot_metric(acc_train, acc_val, 'Accuracy')
 plot_metric(fs_train, fs_val, 'F-Score')
 
-# %% [markdown]
-# # 5. Testing
-# 
 # **Model Loading:** We load our previously saved model to perform a test inference. This loading is necessary if we have not run the training on the Jupyter Notebook, for in this case we will not have the model saved in our current memory. 
-
-# %%
 # Load the pretrained model
 # model_weights_path = '/mnt/disks/dades/model_baseline.pth'
 # model_weights = torch.load(model_weights_path)
