@@ -5,3 +5,5 @@ temp_dir/
 datasets/
 preds_tests/
 .ipynb_checkpoints/
+model/
+
