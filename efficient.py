@@ -23,18 +23,20 @@ from efficientnet_pytorch import EfficientNet
 
 parser = argparse.ArgumentParser(description='PyTorchLab')
 parser.add_argument('-m', '--modeldir', required=True)
-parser.add_argument('-d', '--datadir', required=True)
+parser.add_argument('-t', '--train', required=True)
+parser.add_argument('-v', '--valid', required=True)
 parser.add_argument('-b', '--batchsize', required=False, default=8)
 parser.add_argument('-mn', '--modelname', required=False, default="b5")
 
 args = parser.parse_args()
 
 MODEL_PATH = args.modeldir
-DATASET_PATH = args.datadir
+TRAIN_PATH = args.train
+VALID_PATH = args.valid
 BATCH_SIZE = int(args.batchsize)
 MODEL_NAME = "efficientnet-" + args.modelname
 
-src = (ImageList.from_folder(path=DATASET_PATH).split_by_rand_pct(0.2).label_from_folder())
+src = (ImageList.from_folder(path=TRAIN_PATH).split_by_rand_pct(0.2).label_from_folder())
 transforms = ([rotate(degrees=(-90,90), p=0.8)],[])
 image_size = EfficientNet.get_image_size(MODEL_NAME)
 data = (src.transform(transforms, size=image_size, resize_method=ResizeMethod.SQUISH).databunch(bs=BATCH_SIZE).normalize(imagenet_stats))
@@ -50,15 +52,14 @@ else:
     state_dict = torch.load(MODEL_PATH, map_location=torch.device('cpu'))
 
 model = EfficientNet.from_pretrained(MODEL_NAME)
-model.add_module('_fc',nn.Linear(2048, 45))
-# model.add_module('_fc',nn.Linear(2048, data.c))
+model.add_module('_fc',nn.Linear(2048, data.c))
 
 loss_func =LabelSmoothingCrossEntropy()
 RMSprop = partial(torch.optim.RMSprop)
 learn = Learner(data, model, loss_func=loss_func, opt_func=RMSprop, metrics=[accuracy, FBeta(beta=1, average='macro')])
 learn.model.load_state_dict(state_dict['model'])
 
-src_new = (ImageList.from_folder(path=DATASET_PATH).split_by_rand_pct(0.0).label_from_folder())
+src_new = (ImageList.from_folder(path=TRAIN_PATH).split_by_rand_pct(0.0).label_from_folder())
 str_name = str(src_new.items[0])
 
 def load_train_dataset(root, batchsize):
@@ -111,8 +112,8 @@ def loadmodel(filename):
 
 image_datasets = {}
 dataloaders_dict = {}
-dataloaders_dict['train'], image_datasets['train'] = load_train_dataset(DATASET_PATH, BATCH_SIZE)
-dataloaders_dict['valid'], image_datasets['valid'] = load_train_dataset(DATASET_PATH, BATCH_SIZE)
+dataloaders_dict['train'], image_datasets['train'] = load_train_dataset(TRAIN_PATH, BATCH_SIZE)
+dataloaders_dict['valid'], image_datasets['valid'] = load_train_dataset(VALID_PATH, BATCH_SIZE)
 
 metrics = learn.validate(dataloaders_dict["train"])
 storemodel(metrics, "train_metrics")
