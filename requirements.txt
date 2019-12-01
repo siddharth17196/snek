@@ -13,6 +13,7 @@ cycler==0.10.0
 cymem==2.0.3
 decorator==4.4.1
 defusedxml==0.6.0
+efficientnet-pytorch==0.5.1
 entrypoints==0.3
 fastai==1.0.59
 fastprogress==0.1.21
