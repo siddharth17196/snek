@@ -115,7 +115,12 @@ dataloaders_dict = {}
 dataloaders_dict['train'], image_datasets['train'] = load_train_dataset(TRAIN_PATH, BATCH_SIZE)
 dataloaders_dict['valid'], image_datasets['valid'] = load_train_dataset(VALID_PATH, BATCH_SIZE)
 
-metrics = learn.validate(dataloaders_dict["train"])
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+data_train = DeviceDataLoader(dataloaders_dict["train"], device)
+data_train = DeviceDataLoader(dataloaders_dict["valid"], device)
+
+metrics = learn.validate(data)
 storemodel(metrics, "train_metrics")
 
 metrics = learn.validate(dataloaders_dict["valid"])
