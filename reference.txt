@@ -1,3 +1,7 @@
 Pytorch Documentation (models definitions as well): https://pytorch.org/docs/stable/index.html
 Fastai Documentation: https://docs.fast.ai/
+OpenCV Documentation: https://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_tutorials.html 
 Blog Post: https://medium.com/@Stormblessed/diving-into-deep-learning-part-3-a-deep-learning-practitioners-attempt-to-build-state-of-the-2460292bcfb
+Blog: https://www.jeremyjordan.me/convnet-architectures/
+Post: https://www.reddit.com/r/MachineLearning/comments/67fds7/d_how_does_densenet_compare_to_resnet_and/
+Blog: https://ai.googleblog.com/2019/05/efficientnet-improving-accuracy-and.html
