@@ -1,4 +1,5 @@
 # example of horizontal shift image augmentation
+import sys
 import os
 import time
 import PIL
@@ -18,9 +19,9 @@ if __name__ == "__main__":
     root = str(Path(__file__).parent.parent)
     dataset_path = root + "/datasets"
     #where all class folders are
-    train_path = dataset_path + "/train_resized"
+    train_path = sys.argv[1]
     #the new training folder
-    train_out_path = train_path + "_augmented"
+    train_out_path = sys.argv[2]
     check_create_dir(train_out_path)
     num_images = 4
     classes = os.listdir(train_path)
