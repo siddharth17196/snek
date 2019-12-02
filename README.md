@@ -4,6 +4,7 @@ Classifying snakes.
 ## Challenge
 
 AI Crowd challenge: https://www.aicrowd.com/challenges/snake-species-identification-challenge
+
 Dataset: https://www.aicrowd.com/challenges/snake-species-identification-challenge/dataset_files
 
 ## Setting up the virtual environment
