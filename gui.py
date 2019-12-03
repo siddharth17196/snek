@@ -97,11 +97,6 @@ class Model:
 	    image = image.unsqueeze(0)
 	    return image
 
-	def load_classes(self):
-		# self.classes = datasets.ImageFolder(self.classes).classes
-		self.classes = ['Thamnophis Proximus', 'Nerodia Sipedon', 'Opheodrys Vernalis', 'Crotalus Horridus', 'Crotalus Pyrrhus', 'Nerodia Rhombifer', 'Thamnophis Sirtalis', 'Natrix Natrix', 'Crotalus Adamanteus', 'Charina Bottae', 'Pituophis Catenifer', 'Lampropeltis Triangulum', 'Nerodia Erythrogaster', 'Thamnophis Marcianus', 'Lampropeltis Californiae', 'Crotalus Ruber', 'Rhinocheilus Lecontei', 'Opheodrys Aestivus', 'Thamnophis Ordinoides', 'Thamnophis Radix', 'Masticophis Flagellum', 'Pantherophis Vulpinus', 'Hierophis Viridiflavus', 'Feterodon Platirhinos', 'Pantherophis Emoryi', 'Regina Septemvittata', 'Haldea Striatula', 'Diadophis Punctatus', 'Nerodia Fasciata', 'Storeria Occipitomaculata', 'Crotalus Scutulatus', 'Storeria Dekayi', 'Crotalus Viridis', 'Boa Imperator', 'Pantherophis Obsoletus', 'Lichanura Trivirgata', 'Agkistrodon Contortrix', 'Thamnophis Elegans', 'Agkistrodon Piscivorus', 'Pantherophis Guttatus', 'Crotalus Atrox', 'Carphophism Amoenus', 'Coluber Constrictor', 'Pantherophis Spiloides', 'Pantherophis Alleghaniensis']
-		print(type(self.classes))
-
 	def predict(self, image_dir):
 		data_transforms = transforms.Compose([
 		    transforms.Resize(256),
@@ -111,9 +106,9 @@ class Model:
 		pred = self.model_ft(self.single_image_loader(data_transforms, image_dir))
 		_, pred = torch.max(pred, 1)
 		try:
-			return "The class label is: " + str(self.classes[pred]) + ".\nClass index is: " + str(pred)
+			return "The class label is: " + str(self.classes[pred][0]) + ".\nClass index is: " + str(self.classes[pred][0])
 		except:
-			return "Incomplete dataset. The class index is: " + str(pred)
+			return "Some error... Try another image"
 
 	def __init__(self, modeldir):
 		self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -122,6 +117,7 @@ class Model:
 		self.feature_extract = False
 		self.classes = None
 		self.model_ft = None
+		self.classes = [['thamnophis_proximus',4], ['nerodia_sipedon',67], ['opheodrys_vernalis',72], ['crotalus_horridus',78], ['crotalus_pyrrhus',128], ['nerodia_rhombifer',140], ['thamnophis_sirtalis',204], ['natrix_natrix',239], ['crotalus_adamanteus',273], ['charina_bottae',326], ['pituophis_catenifer',337], ['lampropeltis_triangulum',362], ['nerodia_erythrogaster',390], ['thamnophis_marcianus',394], ['lampropeltis_californiae',448], ['crotalus_ruber',450], ['rhinocheilus_lecontei',460], ['opheodrys_aestivus',508], ['thamnophis_ordinoides',526], ['thamnophis_radix',536], ['masticophis_flagellum',540], ['pantherophis_vulpinus',543], ['hierophis_viridiflavus',561], ['heterodon_platirhinos',581], ['pantherophis_emoryi',597], ['regina_septemvittata',629], ['haldea_striatula',635], ['diadophis_punctatus',639], ['nerodia_fasciata',653], ['storeria_occipitomaculata',654], ['crotalus_scutulatus',663], ['storeria_dekayi',697], ['crotalus_viridis',707], ['boa_imperator',734], ['pantherophis_obsoletus',771], ['lichanura_trivirgata',784], ['agkistrodon_contortrix',804], ['thamnophis_elegans',811], ['agkistrodon_piscivorus',854], ['pantherophis_guttatus',857], ['crotalus_atrox',872], ['carphophis_amoenus',957], ['coluber_constrictor',966], ['pantherophis_spiloides',1059], ['pantherophis_alleghaniensis',1625]]
 
 		got_model_name = self.get_model_name()
 		print(got_model_name)
@@ -146,9 +142,6 @@ class MainWindow(QtWidgets.QMainWindow):
 			return
 		else:
 			self.outLabel.setText("Loaded model")
-		## Load classes
-		# self.model.classes = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory")
-		self.model.load_classes()
 		if self.image != None:
 			self.predict.setStyleSheet("background-color: green; font: white")
 
