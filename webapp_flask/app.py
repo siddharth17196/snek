@@ -45,15 +45,7 @@ def upload():
 			species = getpreds.get_item(upload_folder+'\\'+'snek.jpg')
 			print(species)
 			return render_template('upload_image.html', label=species, imgloc='../static/'+'snek.jpg' )#, imagesource=upload_folder+'\\'+filename)   
-	return render_template("upload_image.html", imgloc='../static/'+'snek.jpg')
-
-# @app.route('/predict', methods=['GET', 'POST'])
-# def predict():
-#     species = getpreds.get_item(upload_folder)
-#     if species != None:
-#     	return species
-#     else:
-#     	return 'YOOOOOOOOOOOO'	
+	return render_template("upload_image.html", imgloc='../static/'+'snek.jpg')	
 
 if __name__ == "__main__":
 	app.run(debug=True)
