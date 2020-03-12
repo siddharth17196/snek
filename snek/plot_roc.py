@@ -11,6 +11,8 @@ from sklearn.metrics import roc_curve, auc
 torch.cuda.set_device(0)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+# unpacking the labels and predictions from pickle
+# else skip to line 34
 y_test = []
 y_pred = []
 
