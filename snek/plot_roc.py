@@ -2,7 +2,7 @@ import sys
 import pickle
 import numpy
 import torch
-from scipy import interp
+from numpy import interp
 import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.preprocessing import label_binarize
