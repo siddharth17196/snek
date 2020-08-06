@@ -1,5 +1,6 @@
 # snek
-Classifying snakes. 
+![GitHub](https://img.shields.io/github/license/siddharth17196/snek)
+> Classifying snakes. 
 
 ## Challenge
 
